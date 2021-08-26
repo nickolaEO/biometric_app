@@ -2,13 +2,14 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as mbox
 import code_handler as ch
+import arduino_transfer_data as atd
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title ('BIOmetrica')
         self.iconbitmap('icon.ico')
-        self.geometry ('600x500')
+        self.geometry ('470x500')
         self.resizable (width=False, height=False)
         self.put_frames()
 
@@ -84,6 +85,7 @@ class InputFrame(ttk.Frame):
         answer = mbox.askyesno(title='Очистка базы',
                                message='Вы действительно хотите очистить базу?')
         if answer == True:
+            atd.drop_arduino_database()
             ch.drop_person_table ()
             self.clear_inputed_text ()
 
@@ -94,9 +96,11 @@ class InputFrame(ttk.Frame):
         else:
             ch.add_person_to_db (self.take_inputed_text())
             id = ch.get_id_by_name (self.take_inputed_text())
+            atd.enroll_person(str(id))
             mbox.showinfo(title='Добавление в базу',
-                          message='"{}" был успешно добавлен в базу'.format (self.take_inputed_text ()[0]))
-            self.clear_inputed_text ()
+                          message='"{}" был успешно добавлен в базу'.format(self.take_inputed_text()[0]))
+
+        self.clear_inputed_text ()
 
     def delete_person(self):
         if self.take_inputed_text() == ['  ']:
@@ -107,7 +111,11 @@ class InputFrame(ttk.Frame):
             answer = mbox.askyesno (title='Удаление из базы',
                                     message='Вы действительно хотите удалить "{}" из базы?'.format(self.take_inputed_text ()[0]))
             if answer == True:
-                ch.delete_person_from_table (self.take_inputed_text ())
+                id = ch.get_id_by_name(self.take_inputed_text())
+                atd.delete_person(str(id))
+                ch.delete_person_from_table(self.take_inputed_text())
+                mbox.showinfo(title='Удаление из базы',
+                              message='"{}" был удален из базы'.format(self.take_inputed_text()[0]))
             self.clear_inputed_text ()
 
 class TableFrame(ttk.Frame):
