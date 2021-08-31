@@ -9,23 +9,80 @@ class App(tk.Tk):
         super().__init__()
         self.title ('BIOmetrica')
         self.iconbitmap('icon.ico')
-        self.geometry ('470x500')
+        self.geometry ('600x500')
         self.resizable (width=False, height=False)
+
+        self.put_menu ()
         self.put_frames()
+        self.popup = Popup(self)
+
+    def put_menu(self):
+        self.config (menu=MainMenu(self))
 
     def put_frames(self):
         self.info_frame = InfoFrame(self).place (relx=0, rely=0, relwidth=1, relheight=0.30)
         self.input_frame = InputFrame(self).place(relx=0, rely=0.30, relwidth=1, relheight=0.30)
         self.table_frame = TableFrame(self).place (relx=0, rely=0.60, relwidth=1, relheight=0.35)
 
-    # def clear_info_window(self):
-    #     self.nametowidget('!infoframe').destroy()
-
     def refresh(self):
         all_frames = [f for f in self.children]
         for f_name in all_frames:
             self.nametowidget(f_name).destroy()
         self.put_frames()
+        self.put_menu ()
+
+    def switch_com_port(self, com_port):
+        self.com_port = com_port
+        atd.choose_com_port(self.com_port)
+        atd.disp_com_port()
+        self.refresh()
+
+class Popup:
+    def __init__(self, master):
+        self.master = master
+
+    def show(self, window_type):
+        getattr(self, window_type)()
+
+    def quit(self):
+        answer = mbox.askyesno('Выход', 'Вы действительно хотите выйти?')
+        if answer == True:
+            self.master.destroy()
+
+    def faq(self):
+        mbox.showinfo('Инструкция', 'Здесь будет размещена инструкция')
+
+    def about_us(self):
+        mbox.showinfo('О Нас', 'ГБПОУ Политехнический колледж им. Н. Н. Годовикова\n\nЛаборатория "Проектирование нейроинтерфейсов"\n\nул. Клары Цеткин, 23, Москва')
+
+class MainMenu(tk.Menu):
+    def __init__(self, mainwindow):
+        super().__init__(mainwindow)
+
+        file_menu = tk.Menu(self, tearoff=0)
+        options_menu = tk.Menu(self, tearoff=0)
+        help_menu = tk.Menu(self, tearoff=0)
+
+        file_menu.add_command(label='Обновить окно', command=mainwindow.refresh)
+        file_menu.add_separator()
+        file_menu.add_command(label='Выход', command=lambda: mainwindow.popup.show('quit'))
+
+        com_port_menu = tk.Menu(options_menu, tearoff=0)
+        self.com_var = tk.StringVar()
+        for com_ports in atd.serial_ports():
+            com_port_menu.add_radiobutton(label=com_ports,
+                                          variable=self.com_var,
+                                          value=com_ports,
+                                          command= lambda: mainwindow.switch_com_port(self.com_var.get()))
+
+        options_menu.add_cascade(label='COM порт', menu=com_port_menu)
+        help_menu.add_command(label='Инструкция', command=lambda: mainwindow.popup.show('faq'))
+        help_menu.add_separator()
+        help_menu.add_command(label="О Нас", command=lambda: mainwindow.popup.show('about_us'))
+
+        self.add_cascade(label='Файл', menu=file_menu)
+        self.add_cascade(label='Настройки', menu=options_menu)
+        self.add_cascade(label='Помощь', menu=help_menu)
 
 class InfoFrame(ttk.Labelframe):
     def __init__(self, container):
@@ -94,12 +151,11 @@ class InputFrame(ttk.Frame):
             mbox.showerror(title='Добавление в базу',
                            message='Вы не ввели никаких данных!')
         else:
-            ch.add_person_to_db (self.take_inputed_text())
-            id = ch.get_id_by_name (self.take_inputed_text())
+            ch.add_person_to_db (self.take_inputed_text ())
+            id = ch.get_id_by_name (self.take_inputed_text ())
             atd.enroll_person(str(id))
             mbox.showinfo(title='Добавление в базу',
                           message='"{}" был успешно добавлен в базу'.format(self.take_inputed_text()[0]))
-
         self.clear_inputed_text ()
 
     def delete_person(self):

@@ -1,12 +1,26 @@
 import serial
 import time
+import serial.tools.list_ports
 
-#print("Connection to " + port + " established succesfully!\n")
+# speeds = ['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200']
+port = []
 
+def serial_ports():
+    result = []
+    for i in serial.tools.list_ports.comports ():
+        result.append(str(i).split(" ")[0])
+    return result
+
+def choose_com_port(com_port):
+    port.clear()
+    port.append(com_port)
+    return port
+
+def disp_com_port():
+    return print("".join(port))
 
 def enroll_person(id):
-    port = "COM3"
-    arduino = serial.Serial(port, 9600)
+    arduino = serial.Serial("".join(port), 9600)
     time.sleep(2)
     data = 0
     data = arduino.write('1'.encode())
@@ -15,8 +29,7 @@ def enroll_person(id):
     arduino.close()
 
 def delete_person(id):
-    port = "COM3"
-    arduino = serial.Serial(port, 9600)
+    arduino = serial.Serial("".join(port), 9600)
     time.sleep(2)
     data = 0
     data = arduino.write('2'.encode())
@@ -25,8 +38,7 @@ def delete_person(id):
     arduino.close()
 
 def drop_arduino_database():
-    port = "COM3"
-    arduino = serial.Serial(port, 9600)
+    arduino = serial.Serial("".join(port), 9600)
     time.sleep(2)
     data = 0
     data = arduino.write('3'.encode())
