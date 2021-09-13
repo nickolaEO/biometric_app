@@ -5,16 +5,28 @@ import code_handler as ch
 import arduino_transfer_data as atd
 
 class App(tk.Tk):
+
+    l_text_key = 'intro'
+    l_text = {
+                'intro': 'Добро пожаловать в BIOmetrica\n\nПередите в Настройки и выберите COM порт',
+                'addition': '',
+                'deletion': '',
+                'drop': 'База данных была очищена'
+    }
+
     def __init__(self):
         super().__init__()
         self.title ('BIOmetrica')
         self.iconbitmap('icon.ico')
-        self.geometry ('600x500')
+        self.geometry ('470x500')
         self.resizable (width=False, height=False)
 
         self.put_menu ()
         self.put_frames()
         self.popup = Popup(self)
+
+        mbox.showinfo(title='COM порт',
+                      message='Перейдите в Настройки и выберите COM порт')
 
     def put_menu(self):
         self.config (menu=MainMenu(self))
@@ -35,7 +47,9 @@ class App(tk.Tk):
         self.com_port = com_port
         atd.choose_com_port(self.com_port)
         atd.disp_com_port()
-        self.refresh()
+
+    def check_fingerprint(self):
+        pass
 
 class Popup:
     def __init__(self, master):
@@ -69,10 +83,10 @@ class MainMenu(tk.Menu):
 
         com_port_menu = tk.Menu(options_menu, tearoff=0)
         self.com_var = tk.StringVar()
-        for com_ports in atd.serial_ports():
-            com_port_menu.add_radiobutton(label=com_ports,
+        for com_port in atd.serial_ports():
+            com_port_menu.add_radiobutton(label=com_port,
                                           variable=self.com_var,
-                                          value=com_ports,
+                                          value=str(com_port).split(" ")[0], #берется лишь значение COM из строки с полным названием порта
                                           command= lambda: mainwindow.switch_com_port(self.com_var.get()))
 
         options_menu.add_cascade(label='COM порт', menu=com_port_menu)
@@ -91,7 +105,7 @@ class InfoFrame(ttk.Labelframe):
 
     def put_widgets(self):
         self.l_info = ttk.Label (self,
-                                 text='Добро пожаловать в BIOmetrica!\nПриложите палец к сканеру отпечатка для распознования.\nДля того, чтобы попасть в базу, введите ФИО в соответсвующие поля,\nнажмите "Добавить" и следуйте дальнейшим инструкциям.',
+                                 text=self.master.l_text[self.master.l_text_key],
                                  justify='center')
         self.l_info.pack (expand=True)
 
@@ -144,6 +158,7 @@ class InputFrame(ttk.Frame):
         if answer == True:
             atd.drop_arduino_database()
             ch.drop_person_table ()
+            self.master.l_text_key = 'drop'
             self.clear_inputed_text ()
 
     def add_person(self):
@@ -154,8 +169,10 @@ class InputFrame(ttk.Frame):
             ch.add_person_to_db (self.take_inputed_text ())
             id = ch.get_id_by_name (self.take_inputed_text ())
             atd.enroll_person(str(id))
-            mbox.showinfo(title='Добавление в базу',
-                          message='"{}" был успешно добавлен в базу'.format(self.take_inputed_text()[0]))
+            self.master.l_text['addition'] = '"{}" был успешно добавлен в базу данных'.format(self.take_inputed_text()[0])
+            self.master.l_text_key = 'addition'
+            # mbox.showinfo(title='Добавление в базу',
+            #               message='"{}" был успешно добавлен в базу'.format(self.take_inputed_text()[0]))
         self.clear_inputed_text ()
 
     def delete_person(self):
@@ -170,8 +187,10 @@ class InputFrame(ttk.Frame):
                 id = ch.get_id_by_name(self.take_inputed_text())
                 atd.delete_person(str(id))
                 ch.delete_person_from_table(self.take_inputed_text())
-                mbox.showinfo(title='Удаление из базы',
-                              message='"{}" был удален из базы'.format(self.take_inputed_text()[0]))
+                self.master.l_text['deletion'] = '"{}" был удалён из базы данных'.format(self.take_inputed_text()[0])
+                self.master.l_text_key = 'deletion'
+                # mbox.showinfo(title='Удаление из базы',
+                #               message='"{}" был удален из базы'.format(self.take_inputed_text()[0]))
             self.clear_inputed_text ()
 
 class TableFrame(ttk.Frame):
