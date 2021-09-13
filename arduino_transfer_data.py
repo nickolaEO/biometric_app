@@ -8,7 +8,9 @@ port = []
 def serial_ports():
     result = []
     for i in serial.tools.list_ports.comports ():
-        result.append(str(i).split(" ")[0])
+        # можно использовать, если хотим видеть в меню лишь названия COM1, COM2, COM3 ....
+        # result.append(str(i).split(" ")[0])
+        result.append(i)
     return result
 
 def choose_com_port(com_port):
