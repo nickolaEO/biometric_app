@@ -8,7 +8,7 @@ _BIOmetrica_ is a Windows OS Desktop application, which interacts with a microco
 - Follow the instructions
 - Check the addition by placing the finger you added earlier
 - If you want to delete the person from databse input **full name** and press **"Delete Person"** button
-- If you want to clear database press **"Clead Database"** button
+- If you want to clear database press **"Clear Database"** button
 
 ## Tech
 
